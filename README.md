@@ -4,6 +4,7 @@
 
 CareerSync is a full-stack SaaS platform designed to empower job seekers by optimizing their resumes for ATS (Applicant Tracking Systems) and enhancing job preparation. This project features a robust resume upload system with AI-powered analysis, secure authentication, and a freemium monetization model, showcasing skills in full-stack development, API design, and secure file handling.
 
+**Check my project [CareerSync](https://full-stack-saa-s-platform.vercel.app) ✨** 
 ## Features
 
 - **Resume Upload System**:
