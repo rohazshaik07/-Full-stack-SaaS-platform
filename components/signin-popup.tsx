@@ -3,28 +3,34 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { X, Chrome, Star, Zap } from "lucide-react"
+import { X, Chrome, Star, Zap, Github } from "lucide-react"
 import Link from "next/link"
 import { useSession } from "next-auth/react"
 
+const POPUP_DISMISSED_KEY = "signin-popup-dismissed"
+
 export function SignInPopup() {
   const [isVisible, setIsVisible] = useState(false)
-  const [timeLeft, setTimeLeft] = useState(90) // 1.5 minutes
+  const [timeLeft, setTimeLeft] = useState(120) // 2 minutes
   const { data: session } = useSession()
 
   useEffect(() => {
     // Don't show popup if user is already signed in
     if (session) return
 
-    // Show popup after a short delay
+    // Check if user has dismissed the popup before
+    const isDismissed = localStorage.getItem(POPUP_DISMISSED_KEY)
+    if (isDismissed) return
+
+    // Show popup immediately on page load
     const showTimer = setTimeout(() => {
       setIsVisible(true)
-    }, 3000) // Show after 3 seconds
+    }, 1000) // Show after 1 second
 
-    // Auto-hide after 1.5 minutes
+    // Auto-hide after 2 minutes
     const hideTimer = setTimeout(() => {
       setIsVisible(false)
-    }, 93000) // 93 seconds (3s delay + 90s visible)
+    }, 121000) // 121 seconds (1s delay + 120s visible)
 
     // Countdown timer
     const countdownInterval = setInterval(() => {
@@ -44,6 +50,16 @@ export function SignInPopup() {
     }
   }, [session])
 
+  const handleMaybeLater = () => {
+    // Store the dismissal in localStorage to prevent future popups
+    localStorage.setItem(POPUP_DISMISSED_KEY, "true")
+    setIsVisible(false)
+  }
+
+  const handleClose = () => {
+    setIsVisible(false)
+  }
+
   if (!isVisible || session) return null
 
   const minutes = Math.floor(timeLeft / 60)
@@ -56,7 +72,7 @@ export function SignInPopup() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setIsVisible(false)}
+            onClick={handleClose}
             className="absolute right-2 top-2 text-gray-400 hover:text-white"
           >
             <X className="w-4 h-4" />
@@ -73,8 +89,7 @@ export function SignInPopup() {
         <CardContent className="text-center space-y-6">
           <div>
             <p className="text-gray-300 mb-4">
-              Sign in with Google to access AI-powered resume optimization, interview practice, and personalized job
-              insights.
+              Sign in to access AI-powered resume optimization, interview practice, and personalized job insights.
             </p>
 
             <div className="grid grid-cols-3 gap-4 mb-6">
@@ -92,28 +107,39 @@ export function SignInPopup() {
               </div>
               <div className="text-center">
                 <div className="w-12 h-12 bg-[#15cb5e]/20 rounded-xl flex items-center justify-center mx-auto mb-2">
-                  <Chrome className="w-6 h-6 text-[#15cb5e]" />
+                  <Github className="w-6 h-6 text-[#15cb5e]" />
                 </div>
                 <p className="text-xs text-gray-400">Market Insights</p>
               </div>
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             <Link href="/auth/signin">
               <Button
                 className="w-full bg-[#15cb5e] hover:bg-[#12b854] text-black rounded-xl font-semibold"
-                onClick={() => setIsVisible(false)}
+                onClick={handleClose}
               >
                 <Chrome className="w-5 h-5 mr-2" />
-                Sign In with OAuth
+                Continue with Google
+              </Button>
+            </Link>
+
+            <Link href="/auth/signin">
+              <Button
+                variant="outline"
+                className="w-full border-white/20 text-gray-300 hover:bg-white/10 rounded-xl"
+                onClick={handleClose}
+              >
+                <Github className="w-5 h-5 mr-2" />
+                Continue with GitHub
               </Button>
             </Link>
 
             <Button
-              variant="outline"
-              className="w-full border-white/20 text-gray-300 hover:bg-white/10 rounded-xl"
-              onClick={() => setIsVisible(false)}
+              variant="ghost"
+              className="w-full text-gray-400 hover:text-gray-300 rounded-xl"
+              onClick={handleMaybeLater}
             >
               Maybe Later
             </Button>

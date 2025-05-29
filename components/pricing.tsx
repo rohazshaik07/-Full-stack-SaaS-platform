@@ -4,12 +4,13 @@ import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Check, X, Star, Zap, Crown, ArrowRight } from "lucide-react"
+import { Check, X, Star, Zap, Crown, ArrowRight, ExternalLink } from "lucide-react"
 
 const plans = [
   {
-    name: "Free",
-    price: "$0",
+    name: "Basic",
+    price: "₹0",
+    originalPrice: 0,
     period: "forever",
     description: "Perfect for getting started",
     icon: Star,
@@ -25,10 +26,13 @@ const plans = [
     ],
     cta: "Get Started Free",
     popular: false,
+    paymentUrl: null,
   },
   {
     name: "Pro",
-    price: "$19",
+    price: "₹199",
+    originalPrice: 199,
+    yearlyPrice: 1999,
     period: "per month",
     description: "For serious job seekers",
     icon: Zap,
@@ -42,12 +46,15 @@ const plans = [
       { name: "Priority email support", included: true },
       { name: "Custom branding", included: false },
     ],
-    cta: "Start Pro Trial",
+    cta: "Start Pro Plan",
     popular: true,
+    paymentUrl: "https://payments.cashfree.com/forms/tnemyapnoitacilppasaaS",
   },
   {
     name: "Enterprise",
-    price: "$49",
+    price: "₹499",
+    originalPrice: 499,
+    yearlyPrice: 3999,
     period: "per month",
     description: "For teams and organizations",
     icon: Crown,
@@ -61,8 +68,9 @@ const plans = [
       { name: "Custom integrations", included: true },
       { name: "SLA guarantee", included: true },
     ],
-    cta: "Contact Sales",
+    cta: "Get Enterprise",
     popular: false,
+    paymentUrl: "https://payments.cashfree.com/forms/tnemyapnoitacilppasaaS",
   },
 ]
 
@@ -87,6 +95,29 @@ export function Pricing() {
 
     return () => observer.disconnect()
   }, [])
+
+  const handlePlanClick = (plan: (typeof plans)[0]) => {
+    if (plan.paymentUrl) {
+      window.open(plan.paymentUrl, "_blank", "noopener,noreferrer")
+    }
+  }
+
+  const getDisplayPrice = (plan: (typeof plans)[0]) => {
+    if (plan.originalPrice === 0) return "₹0"
+
+    if (isAnnual && plan.yearlyPrice) {
+      return `₹${plan.yearlyPrice}`
+    }
+
+    return `₹${plan.originalPrice}`
+  }
+
+  const getSavingsAmount = (plan: (typeof plans)[0]) => {
+    if (!plan.yearlyPrice || plan.originalPrice === 0) return 0
+    const monthlyTotal = plan.originalPrice * 12
+    const savings = monthlyTotal - plan.yearlyPrice
+    return Math.round((savings / monthlyTotal) * 100)
+  }
 
   return (
     <section ref={sectionRef} id="pricing" className="py-24 px-6 relative bg-black">
@@ -141,7 +172,7 @@ export function Pricing() {
             </button>
             <span className={`text-lg ${isAnnual ? "text-white" : "text-gray-400"}`}>
               Annual
-              <Badge className="ml-2 bg-green-500/20 text-green-300 border-green-500/30">Save 20%</Badge>
+              <Badge className="ml-2 bg-green-500/20 text-green-300 border-green-500/30">Save up to 17%</Badge>
             </span>
           </div>
         </div>
@@ -184,30 +215,31 @@ export function Pricing() {
                 <p className="text-gray-400 mb-4">{plan.description}</p>
 
                 <div className="mb-4">
-                  <span className="text-4xl font-bold text-white">
-                    {plan.price === "$0"
-                      ? "$0"
-                      : isAnnual
-                        ? `$${Number.parseInt(plan.price.slice(1)) * 10}`
-                        : plan.price}
-                  </span>
+                  <span className="text-4xl font-bold text-white">{getDisplayPrice(plan)}</span>
                   <span className="text-gray-400 ml-2">
-                    {plan.price === "$0" ? plan.period : isAnnual ? "per year" : plan.period}
+                    {plan.originalPrice === 0 ? plan.period : isAnnual ? "per year" : plan.period}
                   </span>
+                  {isAnnual && plan.yearlyPrice && plan.originalPrice > 0 && (
+                    <div className="text-sm text-green-400 mt-1">Save {getSavingsAmount(plan)}% annually</div>
+                  )}
                 </div>
               </CardHeader>
 
               <CardContent className="pt-0">
                 <Button
+                  onClick={() => handlePlanClick(plan)}
                   className={`w-full mb-8 transition-all duration-300 transform hover:scale-105 ${
                     plan.popular
                       ? "bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white"
-                      : "bg-white/10 hover:bg-white/20 text-white border border-white/20"
+                      : plan.paymentUrl
+                        ? "bg-white/10 hover:bg-white/20 text-white border border-white/20"
+                        : "bg-green-600 hover:bg-green-700 text-white"
                   }`}
                   size="lg"
                 >
                   {plan.cta}
-                  <ArrowRight className="ml-2 w-4 h-4" />
+                  {plan.paymentUrl && <ExternalLink className="ml-2 w-4 h-4" />}
+                  {!plan.paymentUrl && <ArrowRight className="ml-2 w-4 h-4" />}
                 </Button>
 
                 <div className="space-y-4">
