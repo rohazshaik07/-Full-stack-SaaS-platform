@@ -4,15 +4,15 @@ import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Check, Star, Zap, Crown, ArrowRight, Sparkles } from "lucide-react"
+import { Check, Star, Zap, Crown, ArrowRight, Sparkles, ExternalLink } from "lucide-react"
 import Link from "next/link"
 
 const plans = [
   {
-    id: "free",
-    name: "Free Plan",
-    priceMonthly: "₹0",
-    priceYearly: "₹0",
+    id: "basic",
+    name: "Basic Plan",
+    priceMonthly: 0,
+    priceYearly: 0,
     period: "forever",
     description: "Perfect for getting started",
     icon: Star,
@@ -25,64 +25,52 @@ const plans = [
     ],
     cta: "Get Started Free",
     popular: false,
+    paymentUrl: null,
   },
   {
-    id: "basic",
-    name: "Basic Plan",
-    priceMonthly: "₹4,999",
-    priceYearly: "₹49,990",
-    originalYearly: "₹59,988",
+    id: "pro",
+    name: "Pro Plan",
+    priceMonthly: 199,
+    priceYearly: 1999,
+    originalYearly: 2388, // 199 * 12
     period: "per month",
     description: "Perfect for individual job seekers",
-    icon: Star,
-    features: [
-      "Access to core AI features",
-      "Basic data analytics and reporting",
-      "Limited automation workflows",
-      "Standard customer support",
-      "User-friendly dashboard and interface",
-      "Secure data storage",
-    ],
-    cta: "Get Started",
-    popular: false,
-  },
-  {
-    id: "teams",
-    name: "Teams Plan",
-    priceMonthly: "₹14,999",
-    priceYearly: "₹149,990",
-    originalYearly: "₹179,988",
-    period: "per month",
-    description: "Everything in basic",
     icon: Zap,
     features: [
-      "Collaborative Workspaces",
-      "Advanced Analytics",
-      "Customizable Dashboards",
-      "Integration Capabilities",
-      "Monthly Reports",
+      "Advanced resume builder",
+      "Unlimited downloads",
+      "Advanced ATS optimization",
+      "Interview simulator",
+      "Job market analysis",
+      "Cover letter generator",
+      "Priority email support",
     ],
-    cta: "Get Started",
+    cta: "Start Pro Plan",
     popular: true,
+    paymentUrl: "https://payments.cashfree.com/forms/tnemyapnoitacilppasaaS",
   },
   {
     id: "enterprise",
-    name: "Enterprise",
-    priceMonthly: "Custom",
-    priceYearly: "Custom",
-    period: "contact sales",
-    description: "For large organizations",
+    name: "Enterprise Plan",
+    priceMonthly: 499,
+    priceYearly: 3999,
+    originalYearly: 5988, // 499 * 12
+    period: "per month",
+    description: "For teams and organizations",
     icon: Crown,
     features: [
-      "Everything in Teams",
-      "Custom integrations",
+      "Everything in Pro",
+      "Team collaboration",
+      "Custom branding",
+      "API access",
+      "Advanced analytics",
       "Dedicated support",
-      "Advanced security",
-      "Custom training",
+      "Custom integrations",
       "SLA guarantee",
     ],
-    cta: "Contact Sales",
+    cta: "Get Enterprise",
     popular: false,
+    paymentUrl: "https://payments.cashfree.com/forms/tnemyapnoitacilppasaaS",
   },
 ]
 
@@ -107,6 +95,28 @@ export function CommenceJourney() {
 
     return () => observer.disconnect()
   }, [])
+
+  const handlePlanClick = (plan: (typeof plans)[0]) => {
+    if (plan.paymentUrl) {
+      window.open(plan.paymentUrl, "_blank", "noopener,noreferrer")
+    }
+  }
+
+  const getDisplayPrice = (plan: (typeof plans)[0]) => {
+    if (plan.priceMonthly === 0) return "₹0"
+
+    if (isYearly) {
+      return `₹${plan.priceYearly}`
+    }
+
+    return `₹${plan.priceMonthly}`
+  }
+
+  const getSavingsAmount = (plan: (typeof plans)[0]) => {
+    if (!plan.originalYearly || plan.priceMonthly === 0) return 0
+    const savings = plan.originalYearly - plan.priceYearly
+    return Math.round((savings / plan.originalYearly) * 100)
+  }
 
   return (
     <section ref={sectionRef} id="pricing" className="py-24 px-6 relative">
@@ -139,7 +149,7 @@ export function CommenceJourney() {
         >
           <div className="inline-flex items-center px-6 py-3 rounded-full bg-white/5 backdrop-blur-md border border-white/10 mb-6">
             <Sparkles className="w-4 h-4 text-[#15cb5e] mr-2" />
-            <span className="text-[#15cb5e] text-sm font-medium">Our Integrations</span>
+            <span className="text-[#15cb5e] text-sm font-medium">Flexible Pricing</span>
           </div>
 
           <h2 className="text-5xl md:text-6xl font-bold text-white mb-6">
@@ -177,14 +187,14 @@ export function CommenceJourney() {
               }`}
             >
               Yearly
-              <Badge className="ml-2 bg-green-500/20 text-green-300 border-green-500/30">Save 17%</Badge>
+              <Badge className="ml-2 bg-green-500/20 text-green-300 border-green-500/30">Save up to 33%</Badge>
             </Button>
           </div>
         </div>
 
         {/* Pricing Cards */}
         <div
-          className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 transition-all duration-1000 delay-300 ${
+          className={`grid grid-cols-1 md:grid-cols-3 gap-8 transition-all duration-1000 delay-300 ${
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
           }`}
         >
@@ -216,64 +226,44 @@ export function CommenceJourney() {
                 <p className="text-gray-400 mb-4">{plan.description}</p>
 
                 <div className="mb-4">
-                  <span className="text-4xl font-bold text-white">
-                    {plan.priceMonthly === "₹0" || plan.priceMonthly === "Custom"
-                      ? plan.priceMonthly
-                      : isYearly
-                        ? plan.priceYearly
-                        : plan.priceMonthly}
+                  <span className="text-4xl font-bold text-white">{getDisplayPrice(plan)}</span>
+                  <span className="text-gray-400 ml-2">
+                    {plan.priceMonthly === 0 ? plan.period : isYearly ? "per year" : plan.period}
                   </span>
-                  {plan.priceMonthly === "₹0" ? (
-                    <span className="text-gray-400 ml-2">{plan.period}</span>
-                  ) : plan.priceMonthly === "Custom" ? (
-                    <span className="text-gray-400 ml-2">{plan.period}</span>
-                  ) : (
-                    <span className="text-gray-400 ml-2">{isYearly ? "per year" : plan.period}</span>
-                  )}
 
-                  {isYearly && plan.originalYearly && plan.priceMonthly !== "₹0" && plan.priceMonthly !== "Custom" && (
-                    <div className="text-sm text-gray-500 line-through mt-1">{plan.originalYearly}</div>
+                  {isYearly && plan.originalYearly && plan.priceMonthly > 0 && (
+                    <div className="text-sm text-[#15cb5e] mt-1">
+                      Save {getSavingsAmount(plan)}% annually
+                      <div className="text-xs text-gray-500 line-through">₹{plan.originalYearly}</div>
+                    </div>
                   )}
                 </div>
               </CardHeader>
 
               <CardContent className="pt-0">
-                {plan.id === "free" ? (
+                {plan.id === "basic" ? (
                   <Link href="/auth/signup">
                     <Button
-                      className={`w-full mb-8 transition-all duration-300 transform hover:scale-105 rounded-xl ${
-                        plan.popular
-                          ? "bg-[#15cb5e] hover:bg-[#12b854] text-black"
-                          : "bg-white/10 hover:bg-white/20 text-white border border-white/20"
-                      }`}
+                      className="w-full mb-8 transition-all duration-300 transform hover:scale-105 rounded-xl bg-[#15cb5e] hover:bg-[#12b854] text-black"
                       size="lg"
                     >
                       {plan.cta}
                       <ArrowRight className="ml-2 w-4 h-4" />
                     </Button>
                   </Link>
-                ) : plan.id === "enterprise" ? (
+                ) : (
                   <Button
-                    className="w-full mb-8 transition-all duration-300 transform hover:scale-105 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20"
+                    onClick={() => handlePlanClick(plan)}
+                    className={`w-full mb-8 transition-all duration-300 transform hover:scale-105 rounded-xl ${
+                      plan.popular
+                        ? "bg-[#15cb5e] hover:bg-[#12b854] text-black"
+                        : "bg-white/10 hover:bg-white/20 text-white border border-white/20"
+                    }`}
                     size="lg"
                   >
                     {plan.cta}
-                    <ArrowRight className="ml-2 w-4 h-4" />
+                    <ExternalLink className="ml-2 w-4 h-4" />
                   </Button>
-                ) : (
-                  <Link href="/auth/signup">
-                    <Button
-                      className={`w-full mb-8 transition-all duration-300 transform hover:scale-105 rounded-xl ${
-                        plan.popular
-                          ? "bg-[#15cb5e] hover:bg-[#12b854] text-black"
-                          : "bg-white/10 hover:bg-white/20 text-white border border-white/20"
-                      }`}
-                      size="lg"
-                    >
-                      {plan.cta}
-                      <ArrowRight className="ml-2 w-4 h-4" />
-                    </Button>
-                  </Link>
                 )}
 
                 <div className="space-y-4">
@@ -287,6 +277,22 @@ export function CommenceJourney() {
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        {/* FAQ Section */}
+        <div
+          className={`text-center mt-16 transition-all duration-1000 delay-500 ${
+            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+          }`}
+        >
+          <h3 className="text-2xl font-bold text-white mb-4">Questions?</h3>
+          <p className="text-gray-400 mb-6">Our team is here to help you choose the right plan for your needs.</p>
+          <Button
+            variant="outline"
+            className="border-gray-700 text-gray-300 hover:bg-white/10 transition-all duration-300"
+          >
+            Contact Support
+          </Button>
         </div>
       </div>
     </section>
